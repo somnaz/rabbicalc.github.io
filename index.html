@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FunCalc ✨ — Your Playful Calculator Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=Space+Mono&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0d0d14;
+    --surface: #16161f;
+    --card: #1e1e2e;
+    --border: rgba(255,255,255,0.07);
+    --accent1: #ff6b9d;
+    --accent2: #c084fc;
+    --accent3: #38bdf8;
+    --accent4: #fb923c;
+    --accent5: #4ade80;
+    --text: #f0eeff;
+    --muted: #8080a0;
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(192,132,252,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(255,107,157,0.1) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 60% 30%, rgba(56,189,248,0.07) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Stars */
+  .stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--d, 3s) ease-in-out infinite;
+    opacity: var(--o, 0.4);
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: var(--o, 0.4); transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.5); }
+  }
+
+  header {
+    position: relative; z-index: 10;
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .tagline {
+    color: var(--muted);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Tab Navigation */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem;
+    position: relative; z-index: 10;
+  }
+
+  .tab-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.55rem 1.1rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .tab-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .tab-btn.active {
+    color: var(--text);
+    background: linear-gradient(135deg, rgba(192,132,252,0.25), rgba(255,107,157,0.2));
+    border-color: rgba(192,132,252,0.5);
+    box-shadow: 0 0 20px rgba(192,132,252,0.2);
+  }
+
+  /* Panels */
+  .panel {
+    display: none;
+    max-width: 480px;
+    margin: 0 auto 4rem;
+    padding: 0 1rem;
+    position: relative; z-index: 10;
+    animation: fadeUp 0.4s ease;
+  }
+  .panel.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+  .card-subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+  /* Inputs */
+  label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .field { margin-bottom: 1.1rem; }
+
+  input[type="text"], input[type="date"], input[type="number"], select {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus { border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(192,132,252,0.15); }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
+
+  /* Buttons */
+  .btn {
+    width: 100%;
+    padding: 0.85rem;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent2), var(--accent1));
+    color: white;
+    box-shadow: 0 8px 24px rgba(192,132,252,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(192,132,252,0.45); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* Result boxes */
+  .result-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    display: none;
+  }
+  .result-box.show { display: block; animation: fadeUp 0.35s ease; }
+
+  .result-big {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .result-label { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .stat {
+    background: rgba(255,255,255,0.04);
+    border-radius: 12px;
+    padding: 0.8rem 1rem;
+  }
+  .stat-val { font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; }
+  .stat-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+  /* ===== CALCULATOR ===== */
+  .calc-display {
+    background: rgba(0,0,0,0.4);
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    text-align: right;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+  }
+  .calc-expr { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.85rem; min-height: 1.2em; word-break: break-all; }
+  .calc-val  { font-family: 'Space Mono', monospace; font-size: 2.2rem; font-weight: 700; color: var(--text); word-break: break-all; }
+
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+  .calc-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 1.05rem;
+    padding: 1rem 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .calc-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.04); }
+  .calc-btn:active { transform: scale(0.97); }
+  .calc-btn.op { color: var(--accent2); }
+  .calc-btn.fn { color: var(--accent3); font-size: 0.85rem; }
+  .calc-btn.eq { background: linear-gradient(135deg, var(--accent2), var(--accent1)); border: none; color: white; font-size: 1.3rem; }
+  .calc-btn.zero { grid-column: span 2; }
+  .calc-btn.wide { grid-column: span 2; }
+
+  /* ===== LOVE ===== */
+  .love-score-wrap { text-align: center; }
+  .love-ring {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent1) 0%, var(--accent2) var(--pct, 0%), rgba(255,255,255,0.06) var(--pct, 0%));
+    display: flex; align-items: center; justify-content: center;
+    margin: 0.5rem auto 1rem;
+    position: relative;
+    box-shadow: 0 0 30px rgba(255,107,157,0.25);
+    transition: --pct 1s ease;
+  }
+  .love-ring-inner {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: var(--card);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+  }
+  .love-msg { color: var(--muted); font-size: 0.9rem; margin-top: 0.5rem; }
+  .hearts { font-size: 1.5rem; letter-spacing: 4px; margin-top: 0.5rem; }
+
+  /* ===== AGE ===== */
+  .age-big { font-family: 'Playfair Display', serif; font-size: 4rem; font-weight: 900; line-height: 1; }
+  .age-unit { font-size: 1rem; color: var(--muted); font-weight: 400; }
+
+  /* ===== BMI ===== */
+  .bmi-bar-wrap { background: rgba(255,255,255,0.06); border-radius: 8px; overflow: hidden; height: 10px; margin: 0.5rem 0; }
+  .bmi-bar { height: 100%; border-radius: 8px; transition: width 0.8s ease; }
+  .bmi-categories { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+  /* ===== LUCKY NUMBER ===== */
+  .lucky-big {
+    font-family: 'Playfair Display', serif;
+    font-size: 6rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent4), var(--accent1));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    line-height: 1;
+  }
+  .lucky-msg { text-align: center; color: var(--muted); font-size: 0.9rem; margin-top: 0.5rem; }
+
+  /* ===== UNIT CONVERTER ===== */
+  .convert-row {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.5rem; align-items: end; margin-bottom: 1rem;
+  }
+  .convert-arrow { font-size: 1.5rem; padding-bottom: 0.6rem; text-align: center; color: var(--accent2); }
+
+  /* ===== TIP CALC ===== */
+  .tip-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .tip-btn {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .tip-btn.active { background: rgba(192,132,252,0.2); border-color: var(--accent2); }
+
+  /* ===== COUNTDOWN ===== */
+  .countdown-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-top: 1rem; }
+  .countdown-unit { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1rem 0.5rem; text-align: center; }
+  .countdown-val { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; color: var(--accent3); }
+  .countdown-lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--card); border: 1px solid var(--border);
+    padding: 0.75rem 1.5rem; border-radius: 50px;
+    font-size: 0.9rem; color: var(--text);
+    opacity: 0; pointer-events: none;
+    transition: all 0.3s ease; z-index: 1000;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Zodiac */
+  .zodiac-symbol { font-size: 5rem; text-align: center; margin: 0.5rem 0; }
+  .zodiac-traits { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+  .trait-tag {
+    background: rgba(255,255,255,0.07); border-radius: 50px;
+    padding: 0.3rem 0.8rem; font-size: 0.8rem; color: var(--muted);
+  }
+
+  /* Range slider */
+  input[type="range"] {
+    width: 100%; -webkit-appearance: none; appearance: none;
+    height: 6px; border-radius: 3px;
+    background: linear-gradient(to right, var(--accent2) var(--val, 50%), rgba(255,255,255,0.1) var(--val, 50%));
+    outline: none; margin: 0.5rem 0;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--accent2); cursor: pointer;
+    box-shadow: 0 0 8px rgba(192,132,252,0.5);
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<header>
+  <div class="logo">✨ FunCalc</div>
+  <p class="tagline">Age · Love · Life · Numbers · Fun</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="showTab('calc')">🧮 Calculator</button>
+  <button class="tab-btn" onclick="showTab('age')">🎂 Age</button>
+  <button class="tab-btn" onclick="showTab('love')">💕 Love</button>
+  <button class="tab-btn" onclick="showTab('bmi')">⚖️ BMI</button>
+  <button class="tab-btn" onclick="showTab('tip')">🍽️ Tip</button>
+  <button class="tab-btn" onclick="showTab('unit')">📐 Units</button>
+  <button class="tab-btn" onclick="showTab('lucky')">🍀 Lucky #</button>
+  <button class="tab-btn" onclick="showTab('zodiac')">♈ Zodiac</button>
+  <button class="tab-btn" onclick="showTab('countdown')">⏳ Countdown</button>
+</nav>
+
+<!-- ===== CALCULATOR ===== -->
+<div id="tab-calc" class="panel active">
+  <div class="card">
+    <div class="card-title">🧮 Calculator</div>
+    <div class="card-subtitle">Fast & beautiful arithmetic</div>
+    <div class="calc-display">
+      <div class="calc-expr" id="calcExpr">&nbsp;</div>
+      <div class="calc-val" id="calcVal">0</div>
+    </div>
+    <div class="calc-grid">
+      <button class="calc-btn fn" onclick="calcFn('AC')">AC</button>
+      <button class="calc-btn fn" onclick="calcFn('+/-')">±</button>
+      <button class="calc-btn fn" onclick="calcFn('%')">%</button>
+      <button class="calc-btn op" onclick="calcInput('÷')">÷</button>
+
+      <button class="calc-btn" onclick="calcInput('7')">7</button>
+      <button class="calc-btn" onclick="calcInput('8')">8</button>
+      <button class="calc-btn" onclick="calcInput('9')">9</button>
+      <button class="calc-btn op" onclick="calcInput('×')">×</button>
+
+      <button class="calc-btn" onclick="calcInput('4')">4</button>
+      <button class="calc-btn" onclick="calcInput('5')">5</button>
+      <button class="calc-btn" onclick="calcInput('6')">6</button>
+      <button class="calc-btn op" onclick="calcInput('−')">−</button>
+
+      <button class="calc-btn" onclick="calcInput('1')">1</button>
+      <button class="calc-btn" onclick="calcInput('2')">2</button>
+      <button class="calc-btn" onclick="calcInput('3')">3</button>
+      <button class="calc-btn op" onclick="calcInput('+')">+</button>
+
+      <button class="calc-btn zero" onclick="calcInput('0')">0</button>
+      <button class="calc-btn" onclick="calcInput('.')">.</button>
+      <button class="calc-btn eq" onclick="calcFn('=')">=</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AGE ===== -->
+<div id="tab-age" class="panel">
+  <div class="card">
+    <div class="card-title">🎂 Age Calculator</div>
+    <div class="card-subtitle">Every second you've been alive counts</div>
+    <div class="field">
+      <label>Your Date of Birth</label>
+      <input type="date" id="ageDob" />
+    </div>
+    <div class="field">
+      <label>Calculate Age As Of</label>
+      <input type="date" id="ageAsOf" />
+    </div>
+    <button class="btn btn-primary" onclick="calcAge()">✨ Calculate My Age</button>
+    <div class="result-box" id="ageResult">
+      <div class="result-label">You are</div>
+      <div class="age-big" id="ageYears">—</div>
+      <div style="color:var(--muted); font-size:0.9rem; margin-bottom:1rem;">years old</div>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-val" id="ageMonths">—</div><div class="stat-lbl">Months</div></div>
+        <div class="stat"><div class="stat-val" id="ageWeeks">—</div><div class="stat-lbl">Weeks</div></div>
+        <div class="stat"><div class="stat-val" id="ageDays">—</div><div class="stat-lbl">Days</div></div>
+        <div class="stat"><div class="stat-val" id="ageHours">—</div><div class="stat-lbl">Hours</div></div>
+      </div>
+      <div style="margin-top:1rem; padding:0.8rem; background:rgba(255,255,255,0.04); border-radius:12px;">
+        <div class="stat-lbl" style="margin-bottom:4px;">Fun Fact</div>
+        <div id="ageFunFact" style="font-size:0.9rem; color:var(--muted);"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOVE ===== -->
+<div id="tab-love" class="panel">
+  <div class="card">
+    <div class="card-title">💕 Love Calculator</div>
+    <div class="card-subtitle">Discover your cosmic compatibility</div>
+    <div class="field">
+      <label>Your Name</label>
+      <input type="text" id="loveName1" placeholder="Your name..." />
+    </div>
+    <div class="field">
+      <label>Their Name</label>
+      <input type="text" id="loveName2" placeholder="Their name..." />
+    </div>
+    <button class="btn btn-primary" onclick="calcLove()">💖 Calculate Love Score</button>
+    <div class="result-box" id="loveResult">
+      <div class="love-score-wrap">
+        <div class="love-ring" id="loveRing" style="--pct: 0%">
+          <div class="love-ring-inner" id="loveScoreNum">0%</div>
+        </div>
+        <div class="hearts" id="loveHearts">🤍🤍🤍🤍🤍</div>
+        <div style="font-size:1.2rem; font-weight:600; margin-top:0.75rem;" id="loveTitle">—</div>
+        <div class="love-msg" id="loveMsg">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BMI ===== -->
+<div id="tab-bmi" class="panel">
+  <div class="card">
+    <div class="card-title">⚖️ BMI Calculator</div>
+    <div class="card-subtitle">Know your Body Mass Index</div>
+    <div class="field">
+      <label>Unit System</label>
+      <select id="bmiUnit" onchange="toggleBmiUnit()">
+        <option value="metric">Metric (kg / cm)</option>
+        <option value="imperial">Imperial (lbs / ft, in)</option>
+      </select>
+    </div>
+    <div id="bmiMetric">
+      <div class="field">
+        <label>Weight (kg)</label>
+        <input type="number" id="bmiWeightKg" placeholder="70" min="1" />
+      </div>
+      <div class="field">
+        <label>Height (cm)</label>
+        <input type="number" id="bmiHeightCm" placeholder="170" min="1" />
+      </div>
+    </div>
+    <div id="bmiImperial" style="display:none">
+      <div class="field">
+        <label>Weight (lbs)</label>
+        <input type="number" id="bmiWeightLbs" placeholder="154" min="1" />
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem">
+        <div class="field">
+          <label>Height (ft)</label>
+          <input type="number" id="bmiHeightFt" placeholder="5" min="0" />
+        </div>
+        <div class="field">
+          <label>Height (in)</label>
+          <input type="number" id="bmiHeightIn" placeholder="7" min="0" max="11" />
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="calcBMI()">⚖️ Calculate BMI</button>
+    <div class="result-box" id="bmiResult">
+      <div class="result-label">Your BMI</div>
+      <div class="result-big" id="bmiVal">—</div>
+      <div style="margin-top:1rem">
+        <div class="bmi-bar-wrap"><div class="bmi-bar" id="bmiBar" style="width:0; background:var(--accent5)"></div></div>
+        <div class="bmi-categories"><span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span></div>
+      </div>
+      <div style="margin-top:1rem; font-size:1rem; font-weight:600;" id="bmiCat">—</div>
+      <div style="margin-top:0.3rem; font-size:0.85rem; color:var(--muted);" id="bmiTip">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TIP ===== -->
+<div id="tab-tip" class="panel">
+  <div class="card">
+    <div class="card-title">🍽️ Tip Calculator</div>
+    <div class="card-subtitle">Split the bill without the drama</div>
+    <div class="field">
+      <label>Bill Amount ($)</label>
+      <input type="number" id="tipBill" placeholder="0.00" min="0" step="0.01" />
+    </div>
+    <div class="field">
+      <label>Tip Percentage</label>
+      <div class="tip-btns">
+        <div class="tip-btn active" onclick="setTip(10, this)">10%</div>
+        <div class="tip-btn" onclick="setTip(15, this)">15%</div>
+        <div class="tip-btn" onclick="setTip(18, this)">18%</div>
+        <div class="tip-btn" onclick="setTip(20, this)">20%</div>
+        <div class="tip-btn" onclick="setTip(25, this)">25%</div>
+      </div>
+      <input type="range" id="tipRange" min="0" max="50" value="10"
+        oninput="updateTipRange(this)" style="--val:20%" />
+      <div style="text-align:center; font-family:'Space Mono'; color:var(--accent2);" id="tipPctLabel">10%</div>
+    </div>
+    <div class="field">
+      <label>Number of People</label>
+      <input type="number" id="tipPeople" value="1" min="1" />
+    </div>
+    <button class="btn btn-primary" onclick="calcTip()">🍽️ Calculate</button>
+    <div class="result-box" id="tipResult">
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-val" id="tipAmt">$0</div><div class="stat-lbl">Tip Amount</div></div>
+        <div class="stat"><div class="stat-val" id="tipTotal">$0</div><div class="stat-lbl">Total Bill</div></div>
+        <div class="stat"><div class="stat-val" id="tipPerPerson">$0</div><div class="stat-lbl">Per Person</div></div>
+        <div class="stat"><div class="stat-val" id="tipTipPerPerson">$0</div><div class="stat-lbl">Tip / Person</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== UNIT CONVERTER ===== -->
+<div id="tab-unit" class="panel">
+  <div class="card">
+    <div class="card-title">📐 Unit Converter</div>
+    <div class="card-subtitle">Convert anything to everything</div>
+    <div class="field">
+      <label>Category</label>
+      <select id="unitCat" onchange="updateUnitOptions()">
+        <option value="length">📏 Length</option>
+        <option value="weight">⚖️ Weight</option>
+        <option value="temp">🌡️ Temperature</option>
+        <option value="speed">💨 Speed</option>
+        <option value="area">🟦 Area</option>
+        <option value="data">💾 Data</option>
+      </select>
+    </div>
+    <div class="convert-row">
+      <div>
+        <label>From</label>
+        <select id="unitFrom"></select>
+      </div>
+      <div class="convert-arrow">→</div>
+      <div>
+        <label>To</label>
+        <select id="unitTo"></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Value</label>
+      <input type="number" id="unitVal" placeholder="Enter value..." oninput="doConvert()" />
+    </div>
+    <div class="result-box show" id="unitResult" style="display:block; margin-top:0.5rem; padding:1rem;">
+      <div class="result-label">Result</div>
+      <div class="result-big" style="font-size:2rem;" id="unitAns">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LUCKY NUMBER ===== -->
+<div id="tab-lucky" class="panel">
+  <div class="card">
+    <div class="card-title">🍀 Lucky Number</div>
+    <div class="card-subtitle">Discover your number for today</div>
+    <div class="field">
+      <label>Your Name</label>
+      <input type="text" id="luckyName" placeholder="Enter your name..." />
+    </div>
+    <div class="field">
+      <label>Your Birthdate</label>
+      <input type="date" id="luckyDate" />
+    </div>
+    <button class="btn btn-primary" onclick="calcLucky()">🍀 Reveal My Lucky Number</button>
+    <div class="result-box" id="luckyResult">
+      <div class="lucky-big" id="luckyNum">7</div>
+      <div class="lucky-msg" id="luckyMsgText">—</div>
+      <div style="margin-top:1rem; display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+        <div class="stat"><div class="stat-val" id="luckyColor">—</div><div class="stat-lbl">Lucky Color</div></div>
+        <div class="stat"><div class="stat-val" id="luckyDay">—</div><div class="stat-lbl">Lucky Day</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ZODIAC ===== -->
+<div id="tab-zodiac" class="panel">
+  <div class="card">
+    <div class="card-title">♈ Zodiac Sign</div>
+    <div class="card-subtitle">What do the stars say about you?</div>
+    <div class="field">
+      <label>Your Birthday</label>
+      <input type="date" id="zodiacDate" />
+    </div>
+    <button class="btn btn-primary" onclick="calcZodiac()">✨ Reveal My Sign</button>
+    <div class="result-box" id="zodiacResult">
+      <div class="zodiac-symbol" id="zodiacSymbol">♈</div>
+      <div style="text-align:center; font-family:'Playfair Display'; font-size:1.8rem; font-weight:700;" id="zodiacName">—</div>
+      <div style="text-align:center; color:var(--muted); font-size:0.85rem; margin-top:0.3rem;" id="zodiacDates">—</div>
+      <div style="margin-top:1rem; font-size:0.9rem; color:var(--muted); line-height:1.6;" id="zodiacDesc">—</div>
+      <div class="zodiac-traits" id="zodiacTraits"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COUNTDOWN ===== -->
+<div id="tab-countdown" class="panel">
+  <div class="card">
+    <div class="card-title">⏳ Event Countdown</div>
+    <div class="card-subtitle">Count down to what matters most</div>
+    <div class="field">
+      <label>Event Name</label>
+      <input type="text" id="cdName" placeholder="My Birthday 🎉" />
+    </div>
+    <div class="field">
+      <label>Event Date</label>
+      <input type="date" id="cdDate" />
+    </div>
+    <button class="btn btn-primary" onclick="startCountdown()">⏳ Start Countdown</button>
+    <div class="result-box" id="cdResult">
+      <div style="text-align:center; font-size:1rem; font-weight:600; margin-bottom:1rem;" id="cdEventName">—</div>
+      <div class="countdown-grid">
+        <div class="countdown-unit"><div class="countdown-val" id="cdDays">00</div><div class="countdown-lbl">Days</div></div>
+        <div class="countdown-unit"><div class="countdown-val" id="cdHours">00</div><div class="countdown-lbl">Hours</div></div>
+        <div class="countdown-unit"><div class="countdown-val" id="cdMins">00</div><div class="countdown-lbl">Mins</div></div>
+        <div class="countdown-unit"><div class="countdown-val" id="cdSecs">00</div><div class="countdown-lbl">Secs</div></div>
+      </div>
+      <div style="text-align:center; margin-top:1rem; color:var(--muted); font-size:0.85rem;" id="cdSubtext">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+// ===== STARS =====
+(function() {
+  const c = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--o:${0.2+Math.random()*0.6};animation-delay:${Math.random()*4}s`;
+    c.appendChild(s);
+  }
+})();
+
+// ===== TABS =====
+function showTab(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ===== CALCULATOR =====
+let calcCurrent = '0', calcPrev = '', calcOp = '', calcNewNum = true;
+
+function calcInput(v) {
+  const ops = ['+','−','×','÷'];
+  if (ops.includes(v)) {
+    if (calcOp && !calcNewNum) calcFn('=', true);
+    calcPrev = calcCurrent;
+    calcOp = v;
+    calcNewNum = true;
+    document.getElementById('calcExpr').textContent = calcPrev + ' ' + v;
+    return;
+  }
+  if (calcNewNum) { calcCurrent = v === '.' ? '0.' : v; calcNewNum = false; }
+  else {
+    if (v === '.' && calcCurrent.includes('.')) return;
+    calcCurrent = calcCurrent === '0' && v !== '.' ? v : calcCurrent + v;
+  }
+  document.getElementById('calcVal').textContent = calcCurrent;
+}
+
+function calcFn(fn, silent) {
+  if (fn === 'AC') { calcCurrent='0'; calcPrev=''; calcOp=''; calcNewNum=true; document.getElementById('calcExpr').textContent='\u00a0'; document.getElementById('calcVal').textContent='0'; return; }
+  if (fn === '+/-') { calcCurrent = String(-parseFloat(calcCurrent)); document.getElementById('calcVal').textContent = calcCurrent; return; }
+  if (fn === '%') { calcCurrent = String(parseFloat(calcCurrent)/100); document.getElementById('calcVal').textContent = calcCurrent; return; }
+  if (fn === '=') {
+    if (!calcOp) return;
+    const a = parseFloat(calcPrev), b = parseFloat(calcCurrent);
+    let r;
+    if (calcOp==='+') r=a+b; else if (calcOp==='−') r=a-b; else if (calcOp==='×') r=a*b; else if (calcOp==='÷') r= b===0 ? 'Error' : a/b;
+    if (!silent) document.getElementById('calcExpr').textContent = calcPrev + ' ' + calcOp + ' ' + calcCurrent + ' =';
+    calcCurrent = r === 'Error' ? 'Error' : String(parseFloat(r.toFixed(10)));
+    calcOp=''; calcPrev=''; calcNewNum=true;
+    document.getElementById('calcVal').textContent = calcCurrent;
+  }
+}
+
+// ===== AGE =====
+document.getElementById('ageAsOf').value = new Date().toISOString().split('T')[0];
+function calcAge() {
+  const dob = new Date(document.getElementById('ageDob').value);
+  const asOf = new Date(document.getElementById('ageAsOf').value);
+  if (!document.getElementById('ageDob').value || isNaN(dob)) { showToast('Please enter your birth date!'); return; }
+  const diff = asOf - dob;
+  if (diff < 0) { showToast('Date must be in the past!'); return; }
+  const totalDays = Math.floor(diff / 86400000);
+  const totalWeeks = Math.floor(totalDays / 7);
+  const totalMonths = Math.floor(totalDays / 30.4375);
+  const totalHours = Math.floor(diff / 3600000);
+  let y = asOf.getFullYear() - dob.getFullYear();
+  let m = asOf.getMonth() - dob.getMonth();
+  if (m < 0) { y--; m += 12; }
+
+  document.getElementById('ageYears').textContent = y;
+  document.getElementById('ageMonths').textContent = totalMonths.toLocaleString();
+  document.getElementById('ageWeeks').textContent = totalWeeks.toLocaleString();
+  document.getElementById('ageDays').textContent = totalDays.toLocaleString();
+  document.getElementById('ageHours').textContent = totalHours.toLocaleString();
+
+  const facts = [
+    `You've experienced about ${Math.floor(totalDays/365.25*12)} full moons! 🌕`,
+    `Your heart has beaten roughly ${(totalHours * 4200).toLocaleString()} times! 💓`,
+    `You've slept for roughly ${Math.floor(totalDays * 8)} hours in your life! 😴`,
+    `You've taken about ${Math.floor(totalDays * 20000).toLocaleString()} breaths! 🌬️`,
+  ];
+  document.getElementById('ageFunFact').textContent = facts[Math.floor(Math.random()*facts.length)];
+  document.getElementById('ageResult').classList.add('show');
+}
+
+// ===== LOVE =====
+function calcLove() {
+  const n1 = document.getElementById('loveName1').value.trim();
+  const n2 = document.getElementById('loveName2').value.trim();
+  if (!n1 || !n2) { showToast('Enter both names! 💕'); return; }
+  let hash = 0;
+  const combined = (n1 + n2).toLowerCase();
+  for (let i = 0; i < combined.length; i++) hash = ((hash << 5) - hash) + combined.charCodeAt(i);
+  let score = Math.abs(hash) % 101;
+  // Nudge toward interesting middle scores
+  if (score < 10) score = 10 + (score * 3);
+  if (score > 97) score = 85 + (score % 12);
+
+  document.getElementById('loveRing').style.setProperty('--pct', score + '%');
+  setTimeout(() => {
+    document.getElementById('loveScoreNum').textContent = score + '%';
+  }, 100);
+
+  const fullHearts = Math.round(score / 20);
+  document.getElementById('loveHearts').textContent = '❤️'.repeat(fullHearts) + '🤍'.repeat(5 - fullHearts);
+
+  let title, msg;
+  if (score >= 90) { title = '🔥 Soulmates!'; msg = `${n1} and ${n2} are written in the stars. This is rare magic!`; }
+  else if (score >= 75) { title = '💞 Strong Connection!'; msg = `There's real chemistry between ${n1} and ${n2}. Nurture it!`; }
+  else if (score >= 55) { title = '💛 Good Vibes!'; msg = `${n1} and ${n2} have solid compatibility. Keep exploring!`; }
+  else if (score >= 35) { title = '🌱 Potential!'; msg = `${n1} and ${n2} could grow something beautiful with effort.`; }
+  else { title = '🤔 Interesting Pair!'; msg = `Opposites attract! ${n1} and ${n2} bring different energies.`; }
+
+  document.getElementById('loveTitle').textContent = title;
+  document.getElementById('loveMsg').textContent = msg;
+  document.getElementById('loveResult').classList.add('show');
+}
+
+// ===== BMI =====
+function toggleBmiUnit() {
+  const isImperial = document.getElementById('bmiUnit').value === 'imperial';
+  document.getElementById('bmiMetric').style.display = isImperial ? 'none' : 'block';
+  document.getElementById('bmiImperial').style.display = isImperial ? 'block' : 'none';
+}
+function calcBMI() {
+  let weight, height;
+  if (document.getElementById('bmiUnit').value === 'metric') {
+    weight = parseFloat(document.getElementById('bmiWeightKg').value);
+    height = parseFloat(document.getElementById('bmiHeightCm').value) / 100;
+  } else {
+    weight = parseFloat(document.getElementById('bmiWeightLbs').value) * 0.453592;
+    const ft = parseFloat(document.getElementById('bmiHeightFt').value) || 0;
+    const inch = parseFloat(document.getElementById('bmiHeightIn').value) || 0;
+    height = (ft * 12 + inch) * 0.0254;
+  }
+  if (!weight || !height || height === 0) { showToast('Please fill in all fields!'); return; }
+  const bmi = weight / (height * height);
+  document.getElementById('bmiVal').textContent = bmi.toFixed(1);
+  let cat, tip, color, pct;
+  if (bmi < 18.5) { cat='Underweight 🍃'; tip='Consider consulting a nutritionist for a healthy gain plan.'; color='#38bdf8'; pct=15; }
+  else if (bmi < 25) { cat='Normal Weight ✅'; tip='Great job! Keep up your healthy habits.'; color='#4ade80'; pct=40; }
+  else if (bmi < 30) { cat='Overweight ⚠️'; tip='A balanced diet and regular exercise can help.'; color='#fb923c'; pct=65; }
+  else { cat='Obese 🔴'; tip='Please consult a healthcare provider for personalized guidance.'; color='#f87171'; pct=88; }
+  document.getElementById('bmiCat').textContent = cat;
+  document.getElementById('bmiTip').textContent = tip;
+  const bar = document.getElementById('bmiBar');
+  bar.style.background = color;
+  bar.style.width = pct + '%';
+  document.getElementById('bmiResult').classList.add('show');
+}
+
+// ===== TIP =====
+let tipPct = 10;
+function setTip(pct, el) {
+  tipPct = pct;
+  document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tipRange').value = pct;
+  document.getElementById('tipPctLabel').textContent = pct + '%';
+  updateRangeStyle(document.getElementById('tipRange'));
+  calcTip();
+}
+function updateTipRange(el) {
+  tipPct = parseInt(el.value);
+  document.getElementById('tipPctLabel').textContent = tipPct + '%';
+  document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('active'));
+  updateRangeStyle(el);
+  calcTip();
+}
+function updateRangeStyle(el) {
+  el.style.setProperty('--val', (el.value / el.max * 100) + '%');
+}
+function calcTip() {
+  const bill = parseFloat(document.getElementById('tipBill').value) || 0;
+  const people = parseInt(document.getElementById('tipPeople').value) || 1;
+  const tipAmt = bill * tipPct / 100;
+  const total = bill + tipAmt;
+  document.getElementById('tipAmt').textContent = '$' + tipAmt.toFixed(2);
+  document.getElementById('tipTotal').textContent = '$' + total.toFixed(2);
+  document.getElementById('tipPerPerson').textContent = '$' + (total / people).toFixed(2);
+  document.getElementById('tipTipPerPerson').textContent = '$' + (tipAmt / people).toFixed(2);
+  document.getElementById('tipResult').classList.add('show');
+}
+
+// ===== UNIT CONVERTER =====
+const unitData = {
+  length: {
+    units: ['Meter','Kilometer','Centimeter','Millimeter','Mile','Yard','Foot','Inch'],
+    base: { Meter:1, Kilometer:1000, Centimeter:0.01, Millimeter:0.001, Mile:1609.344, Yard:0.9144, Foot:0.3048, Inch:0.0254 }
+  },
+  weight: {
+    units: ['Kilogram','Gram','Pound','Ounce','Ton','Stone'],
+    base: { Kilogram:1, Gram:0.001, Pound:0.453592, Ounce:0.0283495, Ton:1000, Stone:6.35029 }
+  },
+  temp: {
+    units: ['Celsius','Fahrenheit','Kelvin'],
+    base: null
+  },
+  speed: {
+    units: ['m/s','km/h','mph','knot','ft/s'],
+    base: { 'm/s':1, 'km/h':0.277778, 'mph':0.44704, 'knot':0.514444, 'ft/s':0.3048 }
+  },
+  area: {
+    units: ['sq.m','sq.km','sq.ft','sq.mi','Hectare','Acre'],
+    base: { 'sq.m':1, 'sq.km':1e6, 'sq.ft':0.092903, 'sq.mi':2.59e6, Hectare:10000, Acre:4046.86 }
+  },
+  data: {
+    units: ['Bit','Byte','KB','MB','GB','TB'],
+    base: { Bit:0.125, Byte:1, KB:1024, MB:1048576, GB:1073741824, TB:1099511627776 }
+  }
+};
+
+function updateUnitOptions() {
+  const cat = document.getElementById('unitCat').value;
+  const units = unitData[cat].units;
+  const html = units.map((u,i) => `<option value="${u}">${u}</option>`).join('');
+  document.getElementById('unitFrom').innerHTML = html;
+  document.getElementById('unitTo').innerHTML = html;
+  document.getElementById('unitTo').selectedIndex = 1;
+  doConvert();
+}
+
+function doConvert() {
+  const cat = document.getElementById('unitCat').value;
+  const val = parseFloat(document.getElementById('unitVal').value);
+  const from = document.getElementById('unitFrom').value;
+  const to = document.getElementById('unitTo').value;
+  if (isNaN(val)) { document.getElementById('unitAns').textContent = '—'; return; }
+  let result;
+  if (cat === 'temp') {
+    let celsius;
+    if (from==='Celsius') celsius=val;
+    else if (from==='Fahrenheit') celsius=(val-32)*5/9;
+    else celsius=val-273.15;
+    if (to==='Celsius') result=celsius;
+    else if (to==='Fahrenheit') result=celsius*9/5+32;
+    else result=celsius+273.15;
+  } else {
+    const base = unitData[cat].base;
+    result = val * base[from] / base[to];
+  }
+  document.getElementById('unitAns').textContent = parseFloat(result.toPrecision(7)).toLocaleString() + ' ' + to;
+}
+
+document.getElementById('unitFrom').addEventListener('change', doConvert);
+document.getElementById('unitTo').addEventListener('change', doConvert);
+updateUnitOptions();
+
+// ===== LUCKY NUMBER =====
+const luckyMessages = [
+  'Your number radiates powerful creative energy today! ✨',
+  'A deeply spiritual number — trust your instincts! 🔮',
+  'Fortune favors the bold today. Take a risk! 🎲',
+  'This number brings harmony and balance into your life. ☯️',
+  'An ambitious number — great things are coming! 🚀',
+  'Today\'s vibration calls for connection and collaboration. 🤝',
+  'Your lucky number speaks of wisdom and introspection. 📚',
+  'Adventure and excitement are in the air! 🌟',
+  'This number signals new beginnings. Embrace change! 🦋',
+];
+const luckyColors = ['Deep Purple','Emerald','Crimson','Sky Blue','Gold','Coral','Teal','Violet','Amber'];
+const luckyDays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function calcLucky() {
+  const name = document.getElementById('luckyName').value.trim();
+  const date = document.getElementById('luckyDate').value;
+  if (!name) { showToast('Enter your name!'); return; }
+  let sum = 0;
+  for (let c of name.toLowerCase()) sum += c.charCodeAt(0);
+  if (date) { for (let c of date.replace(/-/g,'')) sum += parseInt(c)||0; }
+  let num = sum;
+  while (num > 9) { num = String(num).split('').reduce((a,b)=>a+parseInt(b),0); }
+  if (num === 0) num = 9;
+  document.getElementById('luckyNum').textContent = num;
+  document.getElementById('luckyMsgText').textContent = luckyMessages[(num-1) % luckyMessages.length];
+  document.getElementById('luckyColor').textContent = luckyColors[(num-1) % luckyColors.length];
+  document.getElementById('luckyDay').textContent = luckyDays[(num-1) % luckyDays.length];
+  document.getElementById('luckyResult').classList.add('show');
+}
+
+// ===== ZODIAC =====
+const zodiacData = [
+  { name:'Capricorn', symbol:'♑', emoji:'🐐', dates:'Dec 22 – Jan 19', desc:'Determined and disciplined, Capricorns are natural leaders who value tradition and hard work. They\'re patient, responsible, and deeply ambitious.', traits:['Ambitious','Disciplined','Patient','Responsible','Practical'] },
+  { name:'Aquarius', symbol:'♒', emoji:'🌊', dates:'Jan 20 – Feb 18', desc:'Innovative and humanitarian, Aquarius is the visionary of the zodiac. They think outside the box and care deeply about making the world better.', traits:['Innovative','Humanitarian','Independent','Eccentric','Visionary'] },
+  { name:'Pisces', symbol:'♓', emoji:'🐟', dates:'Feb 19 – Mar 20', desc:'Deeply empathetic and creative, Pisces are dreamers who feel everything intensely. They\'re compassionate, artistic, and deeply intuitive.', traits:['Empathetic','Creative','Intuitive','Dreamy','Compassionate'] },
+  { name:'Aries', symbol:'♈', emoji:'🐏', dates:'Mar 21 – Apr 19', desc:'Energetic and bold, Aries leads with fire. They\'re courageous pioneers who dive headfirst into new adventures with infectious enthusiasm.', traits:['Bold','Energetic','Courageous','Impulsive','Pioneering'] },
+  { name:'Taurus', symbol:'♉', emoji:'🐂', dates:'Apr 20 – May 20', desc:'Reliable and sensual, Taurus is the earth sign that values comfort, beauty, and loyalty. Patient and determined, they\'re the most dependable friends.', traits:['Reliable','Patient','Sensual','Stubborn','Loyal'] },
+  { name:'Gemini', symbol:'♊', emoji:'👯', dates:'May 21 – Jun 20', desc:'Curious and communicative, Geminis are adaptable social butterflies who love ideas and conversations. They see both sides of every story.', traits:['Curious','Adaptable','Witty','Social','Versatile'] },
+  { name:'Cancer', symbol:'♋', emoji:'🦀', dates:'Jun 21 – Jul 22', desc:'Nurturing and deeply emotional, Cancer is the caretaker of the zodiac. They\'re fiercely protective of loved ones and deeply intuitive.', traits:['Nurturing','Protective','Intuitive','Sensitive','Loyal'] },
+  { name:'Leo', symbol:'♌', emoji:'🦁', dates:'Jul 23 – Aug 22', desc:'Vibrant and warm-hearted, Leo commands attention wherever they go. They\'re generous, creative, and love bringing joy to those around them.', traits:['Generous','Creative','Confident','Dramatic','Warm'] },
+  { name:'Virgo', symbol:'♍', emoji:'🌾', dates:'Aug 23 – Sep 22', desc:'Analytical and diligent, Virgo has an eye for detail that others miss. They\'re humble, hardworking, and devoted to helping others.', traits:['Analytical','Diligent','Humble','Detail-oriented','Practical'] },
+  { name:'Libra', symbol:'♎', emoji:'⚖️', dates:'Sep 23 – Oct 22', desc:'Charming and fair-minded, Libra seeks balance and harmony in all things. They\'re diplomatic, social, and have a deep love for beauty.', traits:['Diplomatic','Charming','Fair','Social','Indecisive'] },
+  { name:'Scorpio', symbol:'♏', emoji:'🦂', dates:'Oct 23 – Nov 21', desc:'Intense and magnetic, Scorpio dives deep into every experience. They\'re passionate, perceptive, and fiercely loyal to those they trust.', traits:['Intense','Passionate','Loyal','Perceptive','Determined'] },
+  { name:'Sagittarius', symbol:'♐', emoji:'🏹', dates:'Nov 22 – Dec 21', desc:'Adventurous and optimistic, Sagittarius is the eternal wanderer. They chase wisdom, freedom, and the next great horizon with boundless enthusiasm.', traits:['Adventurous','Optimistic','Philosophical','Honest','Free-spirited'] },
+];
+function getZodiac(date) {
+  const m = date.getMonth() + 1, d = date.getDate();
+  if ((m==1&&d>=20)||(m==2&&d<=18)) return zodiacData[1];
+  if ((m==2&&d>=19)||(m==3&&d<=20)) return zodiacData[2];
+  if ((m==3&&d>=21)||(m==4&&d<=19)) return zodiacData[3];
+  if ((m==4&&d>=20)||(m==5&&d<=20)) return zodiacData[4];
+  if ((m==5&&d>=21)||(m==6&&d<=20)) return zodiacData[5];
+  if ((m==6&&d>=21)||(m==7&&d<=22)) return zodiacData[6];
+  if ((m==7&&d>=23)||(m==8&&d<=22)) return zodiacData[7];
+  if ((m==8&&d>=23)||(m==9&&d<=22)) return zodiacData[8];
+  if ((m==9&&d>=23)||(m==10&&d<=22)) return zodiacData[9];
+  if ((m==10&&d>=23)||(m==11&&d<=21)) return zodiacData[10];
+  if ((m==11&&d>=22)||(m==12&&d<=21)) return zodiacData[11];
+  return zodiacData[0]; // Capricorn
+}
+function calcZodiac() {
+  const val = document.getElementById('zodiacDate').value;
+  if (!val) { showToast('Enter your birthday! 🎂'); return; }
+  const date = new Date(val + 'T12:00:00');
+  const z = getZodiac(date);
+  document.getElementById('zodiacSymbol').textContent = z.emoji + ' ' + z.symbol;
+  document.getElementById('zodiacName').textContent = z.name;
+  document.getElementById('zodiacDates').textContent = z.dates;
+  document.getElementById('zodiacDesc').textContent = z.desc;
+  document.getElementById('zodiacTraits').innerHTML = z.traits.map(t => `<span class="trait-tag">${t}</span>`).join('');
+  document.getElementById('zodiacResult').classList.add('show');
+}
+
+// ===== COUNTDOWN =====
+let cdInterval = null;
+function startCountdown() {
+  const name = document.getElementById('cdName').value || 'Event';
+  const dateVal = document.getElementById('cdDate').value;
+  if (!dateVal) { showToast('Pick an event date!'); return; }
+  const target = new Date(dateVal + 'T00:00:00').getTime();
+  document.getElementById('cdEventName').textContent = '🎯 ' + name;
+  document.getElementById('cdResult').classList.add('show');
+  if (cdInterval) clearInterval(cdInterval);
+  function tick() {
+    const now = Date.now();
+    const diff = target - now;
+    if (diff <= 0) {
+      document.getElementById('cdDays').textContent = '🎉';
+      document.getElementById('cdHours').textContent = '🎉';
+      document.getElementById('cdMins').textContent = '🎉';
+      document.getElementById('cdSecs').textContent = '🎉';
+      document.getElementById('cdSubtext').textContent = name + ' is here! 🎊';
+      clearInterval(cdInterval);
+      return;
+    }
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    document.getElementById('cdDays').textContent = String(days).padStart(2,'0');
+    document.getElementById('cdHours').textContent = String(hours).padStart(2,'0');
+    document.getElementById('cdMins').textContent = String(mins).padStart(2,'0');
+    document.getElementById('cdSecs').textContent = String(secs).padStart(2,'0');
+    document.getElementById('cdSubtext').textContent = `${days} days, ${hours} hrs, ${mins} mins, ${secs} secs until ${name}`;
+  }
+  tick();
+  cdInterval = setInterval(tick, 1000);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Set today's date as default for age field
+document.getElementById('ageAsOf').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
